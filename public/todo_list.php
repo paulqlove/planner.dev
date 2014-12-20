@@ -9,18 +9,21 @@
     //write each item into the file name you entered
        fwrite($handle, $listItem . PHP_EOL);
     }
-    echo 'file saved' . PHP_EOL;
+    // echo 'file saved' . PHP_EOL;
     fclose($handle);
 }
 
 	//function to open a file 
 	function openfile($filename){
-		$filename = 'data/list.txt';
-		$handle = fopen($filename, 'r');
-		$contents = trim(fread($handle, filesize($filename)));
-		$contents_Array = explode("\n", $contents);
-		fclose($handle);
+		$contents_Array = [];
 		
+		if(filesize($filename) > 0) {
+			$filename = 'data/list.txt';
+			$handle = fopen($filename, 'r');
+			$contents = trim(fread($handle, filesize($filename)));
+			$contents_Array = explode("\n", $contents);
+			fclose($handle);
+		}
 			return $contents_Array;
 		}
 	
@@ -28,8 +31,17 @@
 		
 	if(isset($_POST['todo'])){
 			$todo_array[] = $_POST['todo'];
-			$saveArray = saveFile('data/list.txt',$todo_array);
+			saveFile('data/list.txt',$todo_array);
 			}
+	
+	
+
+	if(isset($_GET['remove'])) {
+		$id = $_GET['remove'];
+		unset($todo_array[$id]);
+		saveFile('data/list.txt',$todo_array);
+	}
+
 	?>
 <!DOCTYPE html>
 	<html>
@@ -50,7 +62,7 @@
 						
 						<?php 
 						foreach ($todo_array as $key => $value){
-							echo "<li>$value</li>";
+							echo "<li>{$value} | <a href=\"/todo_list.php?remove={$key}\">X</a> </li>";
 							}
 						
 						?>
