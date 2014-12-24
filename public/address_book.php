@@ -61,7 +61,7 @@ if (!empty($_POST)) {
 		saveFile($fileName, $addressBook);
 	}	
 //add data from form to address book
-if(isset($_GET)) {
+if(isset($_GET['remove'])) {
 	$id = $_GET['remove'];
 	unset($addressBook[$id]);
 	saveFile('address_book.csv',$addressBook);
