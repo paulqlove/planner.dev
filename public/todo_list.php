@@ -32,9 +32,9 @@
 	if(isset($_POST['todo'])){
 			$todo_array[] = htmlentities(strip_tags($_POST['todo']));
 			saveFile('data/list.txt',$todo_array);
+	
+	
 			}
-	
-	
 
 	if(isset($_GET['remove'])) {
 		$id = $_GET['remove'];
