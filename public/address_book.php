@@ -1,77 +1,129 @@
 <?php
 
-include_once 'includes/ClassData.php';
-
-// $addressBook = [
-//     ['The White House', '1600 Pennsylvania Avenue NW', 'Washington', 'DC', '20500'],
-//     ['Marvel Comics', 'P.O. Box 1527', 'Long Island City', 'NY', '11101'],
-//     ['LucasArts', 'P.O. Box 29901', 'San Francisco', 'CA', '94129-0901']
-// ];
-//var_dump($addressBook);
-$fileName1 = new AddressDataStore;
-
-$fileName1->fileName = 'address_book.csv';
-
-$addressBook = $fileName1->read_Address_Book();
+require_once('../inc/address_data_store.php');
 
 
 
-// function openFile($fileName){
-// 			$contents_Array = [];
-		
-// 		if(filesize($fileName) > 0) {
-// 			$handle = fopen($fileName, 'r');
-// 			$contents = trim(fread($handle, filesize($fileName)));
-// 			//$contents_Array = explode("\n", $contents);
-// 			fclose($handle);
-// 		}
-// 			return $contents_Array;
-// 	}
+$AddressDataStore1 = new AddressDataStore('address_book.csv');
+
+$addressBook = $AddressDataStore1->read();
+
 
 //Check for POST request 
-if (!empty($_POST)) {
+if (!empty($_POST)){
+	try {
+
 		
-		$addressBook[] = $_POST;
+		if (
+			empty($_POST['header'])	||
+			empty($_POST['Address'])||
+			empty($_POST['City'])	||
+			empty($_POST['State'])	||
+			empty($_POST['Zipcode']) 
+			) {
+
+		} else {
+			$newEntry['header'] = $_POST['header'];
+			$newEntry['Address'] = $_POST['Address'];
+			$newEntry['City'] = $_POST['City'];
+			$newEntry['State'] = $_POST['State'];
+			$newEntry['Zipcode'] = $_POST['Zipcode'];
+		
+			$addressBook[] = $newEntry;
+			// $addressBook[] = $_POST;
+			$AddressDataStore1->write($addressBook);
+		}
+
+		
+			} catch (Exception $e) {
+				echo "fill out all input fields";
+			}
+		
+}
+		
 		//saveFile($fileName, $addressBook);
-		$fileName1->saveFile($addressBook);
-	}	
+
+	
+
 //add data from form to address book
 if(isset($_GET['remove'])) {
 	$id = $_GET['remove'];
 	unset($addressBook[$id]);
 	//saveFile('address_book.csv',$addressBook);
-	$fileName1->saveFile($addressBook);
+	$AddressDataStore1->write($addressBook);
 }
-		
 	
+	
+	//Verify they're uploaded files and no errors
+	if(count($_FILES) > 0 && $_FILES['file1']['error'] == UPLOAD_ERR_OK) {
+		
+		//destination directory for uploads
+		$uploadDir = '/vagrant/sites/planner.dev/public/uploads/';
+
+		//grab the fileName from uplaoded file 
+		$uploadfile = basename($_FILES['file1']['name']);
+		
+		$savedFileName = $uploadDir . $uploadfile;
+
+		$uploadedAddressData = new AddressDataStore($savedFileName);
+		
+
+	// 	if(substr($savedFileName, -3) == 'csv') {
+			
+				//move the file from temp location to our uploads directory
+				move_uploaded_file($_FILES['file1']['tmp_name'], $savedFileName);
+				//create saved fileName using the files oringal name and our upload directory
+				$read = $uploadedAddressData->read();
+				$addressBook = array_merge($addressBook, $read);
+				//var_dump($addressBook);
+				$AddressDataStore1->write($addressBook);
+				}	
+
+	// 		} else {
+
+	// 			echo "upload csv files only! " . PHP_EOL;
+	// 		}
+
+	// }
+
 ?>
 <!DOCTYPE html>
 <html>
 	<head>
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 		<title>Address Book</title>
 	</head>
 	<body>
-		<table>
-			<tr>
-				<th>Header</th>
-				<th>Address</th>
-				<th>City</th>
-				<th>State</th>
-				<th>Zip</th>
-			</tr>
-			<!-- start working with php, and echoing out the data from $addressBook -->
-			
-			<?foreach ($addressBook as $key => $entry): ?>
-				<tr>
-					<?php foreach ($entry as $value): ?>
-						<td><?= $value ?></td>
-					<?php endforeach ?>
-						<td><a href="/address_book.php?remove=<?= $key ?>">X</a></td>
-				
-				</tr>
-			<? endforeach; ?>
+			<table >
+				<nav class="navbar navbar-default">
+					<th class="col-md-2">Header</th> 
+					<th class="col-md-2">Address</th>
+					<th class="col-md-2">City</th>
+					<th class="col-md-2">State</th>
+					<th class="col-md-2">Zip</th>
+				</nav>
+			</table>
+				<!-- start working with php, and echoing out the data from $addressBook -->
+			<table>
+				<?foreach ($addressBook as $key => $entry): ?>
+					<tr>
+						<?php foreach ($entry as $value): ?>
+							<td><?= $value ?></td>
+						<?php endforeach ?>
+							<td><a href="/address_book.php?remove=<?= $key ?>">X</a></td>
+					
+					</tr>
+				<? endforeach; ?>
 
-		</table>
+			</table>
+		<div class="container">
 		<form method="Post" action="/address_book.php">
 			<div>
 				<input name="header" type="text" placeholder="header">
@@ -83,5 +135,19 @@ if(isset($_GET['remove'])) {
 				<button  type="Submit" value="Submit">Submit</button>
 			</div>
 		</form>
+			<div>
+				<h1>UPLOAD FILE</h1>
+				<form method="POST" enctype="multipart/form-data" action="/address_book.php">
+					<p>
+						<label for="file1">File to upload: </label>
+						<input type="file" id="file1" name="file1">
+					</p>
+					<p>
+						<input type="submit" value="Upload">
+					</p>
+				</form>
+			</div>
+		</div>
+		<!--container-->
 	</body>
 </html>

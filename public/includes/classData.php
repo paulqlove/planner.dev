@@ -2,6 +2,11 @@
 class AddressDataStore
 {
 	public $fileName = '';
+	
+	function __construct($fileName = ''){
+		$this->fileName =$fileName;
+	}
+
 	public function read_Address_Book(){
 				$handle = fopen($this->fileName, 'r');
 
@@ -19,7 +24,9 @@ class AddressDataStore
 			fclose($handle);
 		
 		}
-	public function saveFile($addressBook){
+	
+	
+	function saveFile($addressBook){
 	    //open a file that you named
 	    $handle = fopen($this->fileName, 'w');
 	    //foreach loop to write each new array item
@@ -31,7 +38,7 @@ class AddressDataStore
 	    fclose($handle);
 	    	
 		}
-
-
+		
+	
 	
 }
